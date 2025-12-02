@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Трислоен модел & Рефакториране</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Chosen Palette: Technical Blue & Clean White -->
+    <!-- Background: #f1f5f9 (Slate-100) -->
+    <!-- Primary: #3b82f6 (Blue-500) -->
+    <!-- Success: #10b981 (Green-500) - For passing tests -->
+    <!-- Danger: #ef4444 (Red-500) - For failing tests/bad code -->
+    <!-- Code Font: Fira Code -->
+
+    <!-- Application Structure Plan:
+        1. Concept Hub: Visual explanation of Presentation, Business, and Data layers.
+        2. Refactoring Theory: "Incremental Changes", "Red-Green-Refactor".
+        3. The "Messy" Reality: "Spaghetti Code" step-by-step breakdown.
+        4. Refactoring Dojo (The Game): Interactive exercise.
+        5. Solution Analysis (NEW): Detailed breakdown of the final refactored code (Controller, Service, Repository).
+    -->
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f1f5f9;
+        color: #1e293b;
+      }
+      .code-font {
+        font-family: "Fira Code", monospace;
+      }
+
+      .layer-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+      }
+      .layer-card:hover {
+        transform: translateX(5px);
+      }
+      .layer-ui {
+        border-color: #3b82f6;
+      } /* Blue */
+      .layer-service {
+        border-color: #8b5cf6;
+      } /* Purple */
+      .layer-data {
+        border-color: #f59e0b;
+      } /* Amber */
+
+      .code-block {
+        background-color: #1e293b;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.5s ease;
+      }
+
+      .test-bar {
+        transition: width 0.5s ease, background-color 0.3s;
+      }
+
+      /* Animation for refactoring movement */
+      @keyframes highlight {
+        0% {
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+        }
+      }
+      .pulse-btn {
+        animation: highlight 2s infinite;
+      }
+    </style>
+  </head>
+  <body class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header
+      class="bg-white shadow-sm sticky top-0 z-50 border-b border-slate-200"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <i class="fas fa-layer-group text-blue-600"></i>
+          Трислоен Модел & Рефакториране
+        </h1>
+        <nav class="flex space-x-2 bg-slate-100 p-1 rounded-lg overflow-x-auto">
+          <button
+            onclick="navTo('theory')"
+            id="btn-theory"
+            class="px-4 py-1.5 rounded-md text-sm font-medium bg-white shadow text-blue-600 transition whitespace-nowrap"
+          >
+            Слоеве
+          </button>
+          <button
+            onclick="navTo('refactoring')"
+            id="btn-refactoring"
+            class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition whitespace-nowrap"
+          >
+            Рефакториране
+          </button>
+          <button
+            onclick="navTo('problem')"
+            id="btn-problem"
+            class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition whitespace-nowrap"
+          >
+            Проблемът
+          </button>
+          <button
+            onclick="navTo('practice')"
+            id="btn-practice"
+            class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition whitespace-nowrap"
+          >
+            Упражнение
+          </button>
+          <button
+            onclick="navTo('solution')"
+            id="btn-solution"
+            class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition whitespace-nowrap"
+          >
+            Решение
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+      <!-- SECTION 1: THEORY (The 3 Layers) -->
+      <section id="sec-theory" class="space-y-8 animate-fade-in">
+        <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="text-2xl font-bold mb-4 text-slate-800">
+            Какво е трислойна архитектура?
+          </h2>
+          <p class="text-slate-600 mb-6 max-w-3xl">
+            Това е архитектурен модел, който разделя приложението на три
+            логически части. Това улеснява поддръжката, тестването и промените.
+            Представете си **Ресторант**:
+          </p>
+
+          <div class="grid md:grid-cols-3 gap-6">
+            <!-- Layer 1: Presentation -->
+            <div
+              class="bg-blue-50 p-6 rounded-lg border border-blue-100 hover:shadow-md transition cursor-pointer group"
+              onclick="showDetails('ui')"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-blue-900">1. Presentation Layer</h3>
+                <i
+                  class="fas fa-desktop text-2xl text-blue-500 group-hover:scale-110 transition"
+                ></i>
+              </div>
+              <p class="text-sm text-blue-800 mb-3 font-semibold">
+                "Сервитьорът"
+              </p>
+              <p class="text-xs text-blue-700">
+                Отговаря за визуализацията и приемането на поръчките от клиента.
+                Не готви храната!
+              </p>
+              <div
+                class="mt-4 pt-4 border-t border-blue-200 text-xs code-font text-blue-900"
+              >
+                Controllers, Views, HTML, JSON
+              </div>
+            </div>
+
+            <!-- Layer 2: Business Logic -->
+            <div
+              class="bg-purple-50 p-6 rounded-lg border border-purple-100 hover:shadow-md transition cursor-pointer group"
+              onclick="showDetails('service')"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-purple-900">2. Business Layer</h3>
+                <i
+                  class="fas fa-cogs text-2xl text-purple-500 group-hover:rotate-90 transition duration-500"
+                ></i>
+              </div>
+              <p class="text-sm text-purple-800 mb-3 font-semibold">
+                "Готвачът"
+              </p>
+              <p class="text-xs text-purple-700">
+                Тук се случва магията. Валидации, изчисления, правила. Сърцето
+                на приложението.
+              </p>
+              <div
+                class="mt-4 pt-4 border-t border-purple-200 text-xs code-font text-purple-900"
+              >
+                Services, Domain Models, Logic
+              </div>
+            </div>
+
+            <!-- Layer 3: Data Access -->
+            <div
+              class="bg-amber-50 p-6 rounded-lg border border-amber-100 hover:shadow-md transition cursor-pointer group"
+              onclick="showDetails('data')"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-amber-900">3. Data Layer</h3>
+                <i
+                  class="fas fa-database text-2xl text-amber-500 group-hover:scale-110 transition"
+                ></i>
+              </div>
+              <p class="text-sm text-amber-800 mb-3 font-semibold">
+                "Складът / Килерът"
+              </p>
+              <p class="text-xs text-amber-700">
+                Знае само как да вземе и запази продукти (данни). Не знае
+                рецепти.
+              </p>
+              <div
+                class="mt-4 pt-4 border-t border-amber-200 text-xs code-font text-amber-900"
+              >
+                Repositories, SQL, DAO
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Context Box -->
+          <div
+            id="layer-details"
+            class="mt-6 p-4 bg-slate-800 text-white rounded-lg hidden"
+          >
+            <h4 id="detail-title" class="font-bold text-lg mb-2"></h4>
+            <p id="detail-desc" class="text-sm text-slate-300"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 1.5: REFACTORING THEORY (New Section) -->
+      <section id="sec-refactoring" class="hidden space-y-8 animate-fade-in">
+        <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="p-3 bg-green-100 rounded-full text-green-600">
+              <i class="fas fa-tools text-xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">
+              Какво е Рефакториране?
+            </h2>
+          </div>
+
+          <p
+            class="text-slate-600 mb-8 border-l-4 border-green-500 pl-4 py-2 italic bg-green-50 rounded-r"
+          >
+            "Рефакторирането е процес на промяна на софтуерна система по такъв
+            начин, че да **не се променя външното ѝ поведение**, но да се
+            **подобри вътрешната ѝ структура**." — Мартин Фаулър
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Concept 1: Incremental Changes -->
+            <div class="space-y-4">
+              <h3
+                class="font-bold text-lg text-slate-800 flex items-center gap-2"
+              >
+                <i class="fas fa-shoe-prints text-slate-400"></i>
+                Инкрементални промени (Baby Steps)
+              </h3>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                Не се опитвайте да пренапишете цялата програма наведнъж. Това
+                води до счупен код с дни. Вместо това, правете
+                <strong>малки, безопасни стъпки</strong>.
+              </p>
+              <div
+                class="bg-slate-50 p-4 rounded border border-slate-200 text-sm"
+              >
+                <ul class="space-y-2">
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Премести един метод.</span>
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Пусне тестовете (Зелено!).</span>
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Преименувай променлива.</span>
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Пусне тестовете отново.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Concept 2: Red-Green-Refactor -->
+            <div class="space-y-4">
+              <h3
+                class="font-bold text-lg text-slate-800 flex items-center gap-2"
+              >
+                <i class="fas fa-sync-alt text-slate-400"></i>
+                Цикълът Red-Green-Refactor
+              </h3>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                Това е ритъмът на безопасното програмиране, особено при TDD
+                (Test Driven Development).
+              </p>
+              <div class="flex items-center gap-2 mt-2">
+                <div
+                  class="flex-1 bg-red-100 border border-red-200 p-3 rounded text-center"
+                >
+                  <div class="font-bold text-red-600 text-xs uppercase mb-1">
+                    Red
+                  </div>
+                  <span class="text-xs">Напиши тест, който се чупи.</span>
+                </div>
+                <i class="fas fa-arrow-right text-slate-300"></i>
+                <div
+                  class="flex-1 bg-green-100 border border-green-200 p-3 rounded text-center"
+                >
+                  <div class="font-bold text-green-600 text-xs uppercase mb-1">
+                    Green
+                  </div>
+                  <span class="text-xs">Напиши код, за да мине тестът.</span>
+                </div>
+                <i class="fas fa-arrow-right text-slate-300"></i>
+                <div
+                  class="flex-1 bg-blue-100 border border-blue-200 p-3 rounded text-center shadow-lg transform scale-105"
+                >
+                  <div class="font-bold text-blue-600 text-xs uppercase mb-1">
+                    Refactor
+                  </div>
+                  <span class="text-xs">Почисти кода без да чупиш теста.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 p-4 rounded-lg flex items-start gap-3">
+            <i class="fas fa-lightbulb text-blue-500 mt-1"></i>
+            <div>
+              <h4 class="font-bold text-blue-800 text-sm">
+                Правилото на бойскаута
+              </h4>
+              <p class="text-blue-700 text-sm">
+                "Винаги оставяй къмпинг зоната (кода) по-чиста, отколкото си я
+                намерил." Ако видиш малък проблем, оправи го веднага, но само
+                ако имаш тестове!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <button
+            onclick="navTo('problem')"
+            class="text-slate-500 hover:text-blue-600 font-medium transition flex items-center gap-2"
+          >
+            Виж примера с лош код <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- SECTION 2: THE PROBLEM (Spaghetti Code) -->
+      <section id="sec-problem" class="hidden space-y-8">
+        <div class="grid lg:grid-cols-2 gap-8">
+          <div>
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">
+              Проблемът: "Monolithic Function"
+            </h2>
+            <p class="text-slate-600 mb-6">
+              Този код нарушава всички правила на трислойния модел. Нека го
+              разгледаме стъпка по стъпка.
+            </p>
+
+            <!-- Step-by-Step Explanation -->
+            <div class="space-y-4">
+              <div
+                class="flex gap-4 p-3 bg-white rounded shadow-sm border-l-4 border-blue-400"
+                onmouseenter="highlightLine('ui')"
+                onmouseleave="resetHighlight()"
+              >
+                <div class="font-bold text-blue-500 text-xl">01</div>
+                <div>
+                  <h4 class="font-bold text-slate-700 text-sm">
+                    Проблем: Смесване с UI/HTTP
+                  </h4>
+                  <p class="text-xs text-slate-500">
+                    Функцията зависи от `req` и `res`. Не можете да я извикате
+                    от конзолен скрипт или друга част на приложението, без да
+                    фалшифицирате HTTP обекти.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="flex gap-4 p-3 bg-white rounded shadow-sm border-l-4 border-purple-400"
+                onmouseenter="highlightLine('logic')"
+                onmouseleave="resetHighlight()"
+              >
+                <div class="font-bold text-purple-500 text-xl">02</div>
+                <div>
+                  <h4 class="font-bold text-slate-700 text-sm">
+                    Проблем: Хардкодната Логика
+                  </h4>
+                  <p class="text-xs text-slate-500">
+                    Валидацията `password < 6` е "зазидана" тук. Ако искате да
+                    промените правилото, трябва да редактирате HTTP контролера.
+                    Това нарушава Single Responsibility Principle.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="flex gap-4 p-3 bg-white rounded shadow-sm border-l-4 border-amber-400"
+                onmouseenter="highlightLine('db')"
+                onmouseleave="resetHighlight()"
+              >
+                <div class="font-bold text-amber-500 text-xl">03</div>
+                <div>
+                  <h4 class="font-bold text-slate-700 text-sm">
+                    Проблем: Директен SQL достъп
+                  </h4>
+                  <p class="text-xs text-slate-500">
+                    Функцията създава DB връзка и пише SQL. Това прави
+                    тестването невъзможно без реална база данни. Бавно и
+                    чупливо.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Spaghetti Code -->
+          <div
+            class="bg-gray-900 rounded-lg p-6 shadow-lg border-l-4 border-red-500 relative flex flex-col justify-center"
+          >
+            <div
+              class="absolute top-2 right-4 text-red-400 text-xs font-bold uppercase tracking-wider"
+            >
+              Bad Practice
+            </div>
+            <pre class="code-font text-sm text-gray-300 leading-loose">
+<span class="text-blue-400">function</span> <span class="text-yellow-300">registerUser</span>(req, res) {
+  <span id="code-ui" class="transition duration-300 p-1 rounded"><span class="text-gray-500">// 1. UI Dependency</span>
+  <span class="text-blue-400">const</span> username = req.body.username;
+  <span class="text-blue-400">const</span> password = req.body.password;</span>
+
+  <span id="code-logic" class="transition duration-300 p-1 rounded"><span class="text-gray-500">// 2. Hardcoded Logic</span>
+  <span class="text-purple-400">if</span> (password.length < 6) {
+    <span class="text-blue-400">return</span> res.error(<span class="text-green-300">"Too short"</span>);
+  }</span>
+
+  <span id="code-db" class="transition duration-300 p-1 rounded"><span class="text-gray-500">// 3. Direct DB Access</span>
+  <span class="text-orange-400">const</span> db = <span class="text-blue-400">new</span> Database();
+  <span class="text-orange-400">const</span> sql = <span class="text-green-300">"INSERT INTO users..."</span>;
+  db.execute(sql);</span>
+
+  <span class="text-blue-400">return</span> res.success();
+}</pre>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <button
+            onclick="navTo('practice')"
+            class="bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 font-bold shadow-lg transform transition hover:-translate-y-1"
+          >
+            Към Рефакторирането <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- SECTION 3: PRACTICE (The Refactoring Dojo) -->
+      <section id="sec-practice" class="hidden">
+        <div
+          class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6"
+        >
+          <h2 class="text-2xl font-bold mb-2 text-slate-800">
+            Лаборатория за Рефакториране
+          </h2>
+          <p class="text-sm text-slate-500 mb-4">
+            Цел: Разделете монолитния код на слоеве, като гарантирате, че
+            тестовете минават.
+          </p>
+
+          <!-- Progress/Test Bar -->
+          <div
+            class="w-full bg-slate-200 rounded-full h-4 mb-2 overflow-hidden relative"
+          >
+            <div
+              id="test-bar"
+              class="h-full bg-red-500 w-full transition-all duration-500"
+            ></div>
+          </div>
+          <div
+            class="flex justify-between text-xs font-bold uppercase tracking-wider mb-6"
+          >
+            <span id="test-status" class="text-red-600"
+              >Тестове: Неуспешни / Липсващи</span
+            >
+            <span id="coverage-status">Refactoring Progress: 0%</span>
+          </div>
+
+          <!-- The Workbench -->
+          <div class="grid lg:grid-cols-3 gap-6">
+            <!-- LEFT: The Monolith (Presentation Layer initially) -->
+            <div class="col-span-1 space-y-4">
+              <h3 class="font-bold text-slate-700 border-b pb-2">
+                1. Controller (UI Layer)
+              </h3>
+              <div
+                id="block-controller"
+                class="code-block border-l-4 border-blue-500 min-h-[300px]"
+              >
+                <div class="text-xs text-blue-300 mb-2">UserController.js</div>
+                <pre class="text-xs code-font">
+function register(req) {
+  const user = req.body;
+  
+  <div id="logic-validation" class="bg-purple-900/50 p-2 rounded mb-2 border border-purple-500/30 group relative">
+    <span class="text-purple-300">// Logic: Validation</span>
+    if(user.pass.length < 6) throw Err;
+    <button id="btn-extract-logic" onclick="extractLogic()" class="hidden absolute top-1 right-1 bg-purple-600 hover:bg-purple-500 text-white text-[10px] px-2 py-1 rounded shadow pulse-btn">
+      Extract to Service
+    </button>
+  </div>
+
+  <div id="logic-db" class="bg-amber-900/50 p-2 rounded mb-2 border border-amber-500/30 group relative">
+    <span class="text-amber-300">// Data: SQL Save</span>
+    db.query("INSERT INTO users...");
+    <button id="btn-extract-db" onclick="extractDB()" class="hidden absolute top-1 right-1 bg-amber-600 hover:bg-amber-500 text-white text-[10px] px-2 py-1 rounded shadow pulse-btn">
+      Extract to Repository
+    </button>
+  </div>
+
+  return "Success";
+}</pre>
+              </div>
+            </div>
+
+            <!-- CENTER: Service Layer (Target 1) -->
+            <div
+              class="col-span-1 space-y-4 opacity-50 transition"
+              id="col-service"
+            >
+              <h3 class="font-bold text-slate-700 border-b pb-2">
+                2. Service (Business Layer)
+              </h3>
+              <div
+                id="block-service"
+                class="code-block border-l-4 border-purple-500 min-h-[300px] flex flex-col justify-center items-center text-slate-500 text-sm border-dashed border-2 bg-transparent"
+              >
+                <i class="fas fa-ghost mb-2 text-2xl"></i>
+                Empty Service Layer
+              </div>
+            </div>
+
+            <!-- RIGHT: Repository Layer (Target 2) -->
+            <div
+              class="col-span-1 space-y-4 opacity-50 transition"
+              id="col-repo"
+            >
+              <h3 class="font-bold text-slate-700 border-b pb-2">
+                3. Repository (Data Layer)
+              </h3>
+              <div
+                id="block-repo"
+                class="code-block border-l-4 border-amber-500 min-h-[300px] flex flex-col justify-center items-center text-slate-500 text-sm border-dashed border-2 bg-transparent"
+              >
+                <i class="fas fa-ghost mb-2 text-2xl"></i>
+                Empty Repository Layer
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions Control Panel -->
+          <div
+            class="mt-8 p-4 bg-slate-100 rounded-lg flex flex-wrap gap-4 items-center justify-center"
+          >
+            <div id="step-1-container">
+              <button
+                onclick="writeTest()"
+                id="btn-write-test"
+                class="bg-slate-800 text-white px-6 py-3 rounded hover:bg-slate-700 font-bold flex items-center gap-2"
+              >
+                <i class="fas fa-vial"></i> Стъпка 1: Напиши Тест
+              </button>
+              <p class="text-xs text-slate-500 mt-1 text-center max-w-[200px]">
+                Не пипай кода преди да имаш тест!
+              </p>
+            </div>
+
+            <div
+              id="step-info"
+              class="hidden text-sm font-medium text-slate-700 bg-white px-4 py-2 rounded shadow"
+            >
+              <i class="fas fa-info-circle text-blue-500"></i>
+              <span id="instruction-text">Сега извади бизнес логиката.</span>
+            </div>
+
+            <div
+              id="success-msg"
+              class="hidden text-green-600 font-bold text-lg animate-bounce"
+            >
+              <i class="fas fa-check-circle"></i> Рефакторирането успешно!
+            </div>
+
+            <button
+              onclick="navTo('solution')"
+              id="btn-view-solution"
+              class="hidden bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 font-bold flex items-center gap-2"
+            >
+              <i class="fas fa-search"></i> Виж Анализ на Решението
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: SOLUTION ANALYSIS (New) -->
+      <section id="sec-solution" class="hidden space-y-8 animate-fade-in">
+        <!-- Header explanation -->
+        <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="text-2xl font-bold mb-4 text-slate-800">
+            Анатомия на Рефакторирания Код
+          </h2>
+          <p class="text-slate-600 mb-6">
+            Нека разгледаме финалния резултат под лупа. Вместо една голяма
+            функция, вече имаме три специализирани класа. Ето как и защо се
+            промени всичко.
+          </p>
+
+          <!-- Detailed Breakdown -->
+          <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Layer 1 Analysis -->
+            <div class="space-y-4">
+              <div class="border-b-4 border-blue-500 pb-2">
+                <h3 class="font-bold text-slate-800">
+                  1. Presentation (Controller)
+                </h3>
+                <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded"
+                  >UserController.js</span
+                >
+              </div>
+              <div
+                class="bg-slate-900 p-4 rounded text-xs text-slate-300 font-mono overflow-x-auto"
+              >
+                <pre>
+function register(req, res) {
+  // 1. Extract Input
+  const user = req.body;
+
+  // 2. Delegate to Business Layer
+  userService.validate(user);
+
+  // 3. Delegate to Data Layer
+  userRepo.save(user);
+
+  // 4. Return Response
+  return res.success();
+}</pre
+                >
+              </div>
+              <div
+                class="bg-blue-50 p-4 rounded text-sm text-slate-700 space-y-2"
+              >
+                <p><strong>Какво се промени?</strong></p>
+                <ul class="list-disc pl-4 space-y-1">
+                  <li>Вече няма <code>if</code> проверки за пароли.</li>
+                  <li>Вече няма SQL заявки.</li>
+                  <li>Остана само "оркестрацията" на процеса.</li>
+                </ul>
+                <p><strong>Защо?</strong></p>
+                <p class="text-xs">
+                  Това прави контролера "тънък" (Skinny Controller). Ако сменим
+                  правилата за валидация, няма да пипаме този файл. Ако сменим
+                  базата данни, няма да пипаме този файл.
+                </p>
+              </div>
+            </div>
+
+            <!-- Layer 2 Analysis -->
+            <div class="space-y-4">
+              <div class="border-b-4 border-purple-500 pb-2">
+                <h3 class="font-bold text-slate-800">2. Business (Service)</h3>
+                <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded"
+                  >UserService.js</span
+                >
+              </div>
+              <div
+                class="bg-slate-900 p-4 rounded text-xs text-slate-300 font-mono overflow-x-auto"
+              >
+                <pre>
+class UserService {
+  validate(user) {
+    // Pure Logic
+    if (!user.username) 
+      throw new Error("Missing username");
+      
+    if (user.password.length < 6) 
+      throw new Error("Weak password");
+      
+    // More complex rules...
+  }
+}</pre
+                >
+              </div>
+              <div
+                class="bg-purple-50 p-4 rounded text-sm text-slate-700 space-y-2"
+              >
+                <p><strong>Какво се промени?</strong></p>
+                <ul class="list-disc pl-4 space-y-1">
+                  <li>Тук живеят всички "Business Rules".</li>
+                  <li>Няма <code>req</code> или <code>res</code> (HTTP).</li>
+                  <li>Няма SQL.</li>
+                </ul>
+                <p><strong>Защо?</strong></p>
+                <p class="text-xs">
+                  Този код е 100% тестваем (Unit Test). Не ни трябва сървър или
+                  база данни, за да проверим дали логиката за паролата работи.
+                  Можем да ползваме този клас и в CLI скрипт, не само в Web API.
+                </p>
+              </div>
+            </div>
+
+            <!-- Layer 3 Analysis -->
+            <div class="space-y-4">
+              <div class="border-b-4 border-amber-500 pb-2">
+                <h3 class="font-bold text-slate-800">3. Data (Repository)</h3>
+                <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded"
+                  >UserRepository.js</span
+                >
+              </div>
+              <div
+                class="bg-slate-900 p-4 rounded text-xs text-slate-300 font-mono overflow-x-auto"
+              >
+                <pre>
+class UserRepository {
+  save(user) {
+    // Database specifics
+    const sql = "INSERT INTO users...";
+    db.execute(sql, [user.name, user.pass]);
+  }
+}</pre
+                >
+              </div>
+              <div
+                class="bg-amber-50 p-4 rounded text-sm text-slate-700 space-y-2"
+              >
+                <p><strong>Какво се промени?</strong></p>
+                <ul class="list-disc pl-4 space-y-1">
+                  <li>Тук е единственото място със SQL.</li>
+                  <li>Изолирано от логиката и UI.</li>
+                </ul>
+                <p><strong>Защо?</strong></p>
+                <p class="text-xs">
+                  Ако утре решим да сменим MySQL с MongoDB, променяме САМО този
+                  файл. Останалите 99% от приложението няма да разберат, че нещо
+                  се е случило.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-slate-200">
+            <h3 class="font-bold text-slate-800 mb-3">
+              Обобщение на потока (Data Flow)
+            </h3>
+            <div
+              class="flex items-center justify-between text-center text-sm gap-2"
+            >
+              <div class="bg-blue-100 p-3 rounded flex-1">
+                <div class="font-bold text-blue-800">Request</div>
+                <div class="text-xs text-blue-600">User clicks "Register"</div>
+              </div>
+              <i class="fas fa-arrow-right text-slate-400"></i>
+              <div class="bg-white border-2 border-blue-500 p-3 rounded flex-1">
+                <div class="font-bold text-blue-800">Controller</div>
+                <div class="text-xs text-slate-500">Coordination</div>
+              </div>
+              <i class="fas fa-arrow-right text-slate-400"></i>
+              <div
+                class="bg-white border-2 border-purple-500 p-3 rounded flex-1"
+              >
+                <div class="font-bold text-purple-800">Service</div>
+                <div class="text-xs text-slate-500">Decisions</div>
+              </div>
+              <i class="fas fa-arrow-right text-slate-400"></i>
+              <div
+                class="bg-white border-2 border-amber-500 p-3 rounded flex-1"
+              >
+                <div class="font-bold text-amber-800">Repository</div>
+                <div class="text-xs text-slate-500">Storage</div>
+              </div>
+              <i class="fas fa-arrow-right text-slate-400"></i>
+              <div class="bg-amber-100 p-3 rounded flex-1">
+                <div class="font-bold text-amber-800">Database</div>
+                <div class="text-xs text-amber-600">Persistence</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // --- Navigation Logic ---
+      function navTo(section) {
+        // Hide all
+        document.getElementById("sec-theory").classList.add("hidden");
+        document.getElementById("sec-refactoring").classList.add("hidden");
+        document.getElementById("sec-problem").classList.add("hidden");
+        document.getElementById("sec-practice").classList.add("hidden");
+        document.getElementById("sec-solution").classList.add("hidden");
+
+        // Reset nav styles
+        document.querySelectorAll("nav button").forEach((btn) => {
+          btn.classList.remove("bg-white", "shadow", "text-blue-600");
+          btn.classList.add("text-slate-500");
+        });
+
+        // Show selected
+        document.getElementById(`sec-${section}`).classList.remove("hidden");
+        const activeBtn = document.getElementById(`btn-${section}`);
+        activeBtn.classList.add("bg-white", "shadow", "text-blue-600");
+        activeBtn.classList.remove("text-slate-500");
+      }
+
+      // --- Theory Interactive ---
+      function showDetails(layer) {
+        const box = document.getElementById("layer-details");
+        const title = document.getElementById("detail-title");
+        const desc = document.getElementById("detail-desc");
+
+        box.classList.remove("hidden");
+
+        if (layer === "ui") {
+          box.className =
+            "mt-6 p-4 bg-blue-900 text-white rounded-lg animate-fade-in";
+          title.innerText = "Presentation Layer (UI)";
+          desc.innerText =
+            "Основна цел: Да преведе потребителските действия (кликове, форми) във формат, разбираем за системата, и да върне отговор (HTML, JSON). Този слой трябва да е 'тънък' - без сложна логика.";
+        } else if (layer === "service") {
+          box.className =
+            "mt-6 p-4 bg-purple-900 text-white rounded-lg animate-fade-in";
+          title.innerText = "Business Logic Layer (Service)";
+          desc.innerText =
+            "Основна цел: Взема решения. Проверява дали потребителят има право, дали данните са валидни, извършва изчисления. Той е независим от това дали ползваме SQL или текстов файл.";
+        } else if (layer === "data") {
+          box.className =
+            "mt-6 p-4 bg-amber-900 text-white rounded-lg animate-fade-in";
+          title.innerText = "Data Access Layer (Repository)";
+          desc.innerText =
+            "Основна цел: Абстракция над данните. CRUD операции (Create, Read, Update, Delete). Този слой изолира SQL заявките, така че ако сменим базата данни, променяме само тук.";
+        }
+      }
+
+      // --- Problem Code Highlight ---
+      function highlightLine(part) {
+        if (part === "ui") {
+          document
+            .getElementById("code-ui")
+            .classList.add("bg-blue-900", "bg-opacity-50");
+        } else if (part === "logic") {
+          document
+            .getElementById("code-logic")
+            .classList.add("bg-purple-900", "bg-opacity-50");
+        } else if (part === "db") {
+          document
+            .getElementById("code-db")
+            .classList.add("bg-amber-900", "bg-opacity-50");
+        }
+      }
+
+      function resetHighlight() {
+        document
+          .getElementById("code-ui")
+          .classList.remove("bg-blue-900", "bg-opacity-50");
+        document
+          .getElementById("code-logic")
+          .classList.remove("bg-purple-900", "bg-opacity-50");
+        document
+          .getElementById("code-db")
+          .classList.remove("bg-amber-900", "bg-opacity-50");
+      }
+
+      // --- Refactoring Game Logic ---
+      let gameState = {
+        hasTest: false,
+        logicExtracted: false,
+        dbExtracted: false,
+      };
+
+      function writeTest() {
+        const btn = document.getElementById("btn-write-test");
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Writing Test...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+          gameState.hasTest = true;
+
+          document.getElementById("step-1-container").classList.add("hidden");
+          document.getElementById("step-info").classList.remove("hidden");
+
+          const bar = document.getElementById("test-bar");
+          bar.classList.remove("bg-red-500");
+          bar.classList.add("bg-green-500");
+          document.getElementById("test-status").innerText =
+            "Test: PASSING (Legacy Code)";
+          document
+            .getElementById("test-status")
+            .classList.remove("text-red-600");
+          document
+            .getElementById("test-status")
+            .classList.add("text-green-600");
+
+          document
+            .getElementById("btn-extract-logic")
+            .classList.remove("hidden");
+          document.getElementById("col-service").classList.remove("opacity-50");
+
+          updateInstruction();
+        }, 1000);
+      }
+
+      function extractLogic() {
+        if (!gameState.hasTest) return;
+
+        const logicBlock = document.getElementById("logic-validation");
+        logicBlock.innerHTML = `
+                <span class="text-purple-300 font-bold">✓ Validated</span>
+                <div class="text-[10px] text-purple-200">Moved to UserService</div>
+            `;
+        logicBlock.classList.add("opacity-50");
+
+        const serviceCol = document.getElementById("block-service");
+        serviceCol.classList.remove(
+          "border-dashed",
+          "bg-transparent",
+          "justify-center",
+          "items-center",
+          "text-slate-500"
+        );
+        serviceCol.innerHTML = `
+                <div class="text-xs text-purple-300 mb-2">UserService.js</div>
+                <pre class="text-xs code-font">
+class UserService {
+  validate(user) {
+    if(user.pass.length < 6) 
+       throw Err;
+  }
+}</pre>
+            `;
+
+        gameState.logicExtracted = true;
+        document.getElementById("coverage-status").innerText =
+          "Refactoring Progress: 50%";
+        document.getElementById("col-repo").classList.remove("opacity-50");
+
+        document.getElementById("btn-extract-db").classList.remove("hidden");
+
+        updateInstruction();
+      }
+
+      function extractDB() {
+        if (!gameState.logicExtracted) return;
+
+        const dbBlock = document.getElementById("logic-db");
+        dbBlock.innerHTML = `
+                <span class="text-amber-300 font-bold">✓ Saved</span>
+                <div class="text-[10px] text-amber-200">Moved to UserRepository</div>
+            `;
+        dbBlock.classList.add("opacity-50");
+
+        const repoCol = document.getElementById("block-repo");
+        repoCol.classList.remove(
+          "border-dashed",
+          "bg-transparent",
+          "justify-center",
+          "items-center",
+          "text-slate-500"
+        );
+        repoCol.innerHTML = `
+                <div class="text-xs text-amber-300 mb-2">UserRepository.js</div>
+                <pre class="text-xs code-font">
+class UserRepository {
+  save(user) {
+    db.query("INSERT...");
+  }
+}</pre>
+            `;
+
+        gameState.dbExtracted = true;
+        document.getElementById("coverage-status").innerText =
+          "Refactoring Progress: 100%";
+
+        document
+          .getElementById("block-controller")
+          .querySelector("pre").innerHTML = `
+function register(req) {
+  <span class="text-purple-400">userService.validate(req.body);</span>
+  <span class="text-amber-400">userRepo.save(req.body);</span>
+  return "Success";
+}`;
+
+        updateInstruction();
+      }
+
+      function updateInstruction() {
+        const text = document.getElementById("instruction-text");
+        if (gameState.hasTest && !gameState.logicExtracted) {
+          text.innerText =
+            "Тестът минава! Сега натисни 'Extract to Service' бутона в Контролера.";
+        } else if (gameState.logicExtracted && !gameState.dbExtracted) {
+          text.innerText =
+            "Логиката е преместена. Тестът все още е зелен. Сега премести SQL кода.";
+        } else if (gameState.dbExtracted) {
+          document.getElementById("step-info").classList.add("hidden");
+          document.getElementById("success-msg").classList.remove("hidden");
+          document
+            .getElementById("btn-view-solution")
+            .classList.remove("hidden");
+        }
+      }
+    </script>
+  </body>
+</html>
