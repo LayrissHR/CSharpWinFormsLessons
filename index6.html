@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Пълен курс: ORM Съпоставяне и Архитектура</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      pre {
+        scrollbar-width: thin;
+        scrollbar-color: #4b5563 #111827;
+      }
+      .step-active {
+        border-left: 4px solid #4f46e5;
+        background-color: #f5f3ff;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+    <!-- Header -->
+    <header
+      class="bg-slate-900 text-white p-6 shadow-xl border-b-4 border-indigo-500"
+    >
+      <div class="max-w-6xl mx-auto flex items-center justify-between">
+        <div>
+          <h1
+            class="text-2xl font-black tracking-tight flex items-center gap-3"
+          >
+            <i data-lucide="layers" class="w-8 h-8 text-indigo-400"></i>
+            МАСТЪР КЛАС: ORM АРХИТЕКТУРА
+          </h1>
+          <p
+            class="text-slate-400 text-sm mt-1 uppercase tracking-widest font-semibold"
+          >
+            От релационни таблици към C# обекти
+          </p>
+        </div>
+        <div class="hidden lg:block text-right">
+          <span
+            class="bg-indigo-600 px-3 py-1 rounded-full text-xs font-bold uppercase"
+            >Пълен Курс (16 Стъпки)</span
+          >
+        </div>
+      </div>
+    </header>
+
+    <main
+      class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8"
+    >
+      <!-- Sidebar Navigation -->
+      <aside
+        class="lg:col-span-4 space-y-2 overflow-y-auto max-h-[80vh] pr-2 custom-scrollbar"
+      >
+        <h3
+          class="text-slate-500 text-xs font-bold uppercase mb-4 px-2 tracking-widest"
+        >
+          Програма на обучението
+        </h3>
+        <div id="sidebar" class="space-y-1">
+          <!-- Navigation buttons will be injected here -->
+        </div>
+      </aside>
+
+      <!-- Content Area -->
+      <div
+        class="lg:col-span-8 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col min-h-[600px]"
+      >
+        <div id="content-container" class="p-8 flex-grow">
+          <div
+            class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4"
+          >
+            <h2
+              id="section-title"
+              class="text-2xl font-bold text-slate-800 flex items-center gap-3"
+            >
+              <!-- Title injected here -->
+            </h2>
+            <span
+              id="step-counter"
+              class="text-xs font-black text-slate-400 bg-slate-100 px-3 py-1 rounded-full"
+            ></span>
+          </div>
+
+          <div
+            id="section-body"
+            class="animate-fade-in leading-relaxed text-slate-700"
+          >
+            <!-- Content injected here -->
+          </div>
+        </div>
+
+        <!-- Footer Navigation -->
+        <div
+          class="bg-slate-50 p-6 border-t border-slate-200 flex justify-between items-center"
+        >
+          <button
+            id="prev-btn"
+            class="flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-200 transition-all disabled:opacity-20"
+          >
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Предишна
+          </button>
+
+          <div
+            id="progress-bar-container"
+            class="hidden sm:flex flex-grow mx-8 bg-slate-200 h-2 rounded-full overflow-hidden"
+          >
+            <div
+              id="progress-bar"
+              class="bg-indigo-600 h-full transition-all duration-500"
+              style="width: 0%"
+            ></div>
+          </div>
+
+          <button
+            id="next-btn"
+            class="flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+          >
+            Следваща <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="p-8 text-center text-slate-400 text-xs font-medium">
+      Разработено за обучение по "Разработка на софтуер" &bull; 2024 &bull;
+      Entity Framework Core 8.0
+    </footer>
+
+    <script>
+      const sections = [
+        {
+          title: "1. Философията на ORM",
+          icon: "brain",
+          content: `
+                    <div class="space-y-4">
+                        <p>В модерното програмиране ние не искаме да пишем SQL заявки ръчно вътре в нашия код. Това е бавно и лесно за грешки. <strong>ORM (Object-Relational Mapping)</strong> е технология, която действа като автоматичен преводач.</p>
+                        <div class="bg-indigo-50 p-6 rounded-2xl border-l-4 border-indigo-500">
+                            <h4 class="font-bold text-indigo-900 mb-4">Основните цели на ORM:</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-indigo-600 mt-0.5"></i> <span><strong>Абстракция:</strong> Работим с обекти, не с редове и колони.</span></li>
+                                <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-indigo-600 mt-0.5"></i> <span><strong>Типизация:</strong> C# знае точно какъв тип данни очакваме (int, string, DateTime).</span></li>
+                                <li class="flex items-start gap-3"><i data-lucide="check" class="w-5 h-5 text-indigo-600 mt-0.5"></i> <span><strong>Автоматизация:</strong> SQL заявките се генерират автоматично на база нашите действия в кода.</span></li>
+                            </ul>
+                        </div>
+                    </div>`,
+        },
+        {
+          title: "2. Проектиране на Базата",
+          icon: "database",
+          content: `
+                    <div class="space-y-4">
+                        <p>Преди кода, трябва да подготвим "релационния" свят. Ще използваме библиотека с автори и книги.</p>
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl">
+                            <div class="bg-slate-800 px-4 py-2 flex justify-between border-b border-slate-700">
+                                <span class="text-slate-400 text-xs font-mono">XAMPP / phpMyAdmin SQL</span>
+                            </div>
+                            <pre class="p-6 text-indigo-300 text-sm font-mono leading-relaxed overflow-x-auto"><code>CREATE DATABASE LibraryManagerDB;
+USE LibraryManagerDB;
+
+CREATE TABLE Authors (
+    AuthorId INT AUTO_INCREMENT PRIMARY KEY,
+    FullName VARCHAR(100) NOT NULL,
+    Bio TEXT
+);
+
+CREATE TABLE Books (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Title VARCHAR(200) NOT NULL,
+    Price DECIMAL(10, 2),
+    AuthorId INT,
+    FOREIGN KEY (AuthorId) REFERENCES Authors(AuthorId)
+);</code></pre>
+                        </div>
+                    </div>`,
+        },
+        {
+          title: "3. Инсталиране на ORM драйвери",
+          icon: "download",
+          content: `
+                    <div class="space-y-4">
+                        <p>За да може .NET да "говори" с MySQL, ни трябва специален драйвер. В .NET светът на ORM се нарича <strong>Entity Framework Core (EF Core)</strong>.</p>
+                        <p>Отворете <em>NuGet Package Manager Console</em> и инсталирайте:</p>
+                        ${createCodeBlock("powershell", "Install-Package Pomelo.EntityFrameworkCore.MySql\nInstall-Package Microsoft.EntityFrameworkCore.Design")}
+                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-sm">
+                            <strong>Важно:</strong> Пакетът <em>Pomelo</em> е най-стабилният драйвер за MySQL/MariaDB в ASP.NET средите.
+                        </div>
+                    </div>`,
+        },
+        {
+          title: "4. Мапване на клас Author",
+          icon: "file-code",
+          content: `
+                    <div class="space-y-4">
+                        <p>Първото съпоставяне (Mapping): Класът <code>Author</code> отговаря на таблица <code>Authors</code>.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `[Table("Authors")] // Указва името на таблицата в SQL
+public class Author {
+    [Key] // Указва Primary Key
+    [Column("AuthorId")] // Име на колоната в базата
+    public int Id { get; set; }
+
+    [Required] // Еквивалент на NOT NULL
+    [StringLength(100)]
+    public string FullName { get; set; } = string.Empty;
+
+    public string? Bio { get; set; }
+
+    // Навигационно свойство: Указва релацията 1:N
+    public List<Book> Books { get; set; } = new();
+}`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "5. Мапване на клас Book",
+          icon: "file-code",
+          content: `
+                    <div class="space-y-4">
+                        <p>Забележете как съпоставяме външния ключ (Foreign Key) и типа <code>decimal</code>.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `public class Book {
+    public int Id { get; set; } // Ако се казва Id, EF го разпознава като Key автоматично
+
+    [Required]
+    public string Title { get; set; } = string.Empty;
+
+    [Column(TypeName = "decimal(10, 2)")] // Мапване на точен SQL тип
+    public decimal Price { get; set; }
+
+    // Свойства за релация
+    public int AuthorId { get; set; } // Външен ключ
+    
+    [ForeignKey("AuthorId")]
+    public Author? Author { get; set; } // Обектът-родител
+}`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "6. Разбиране на Навигационните Свойства",
+          icon: "git-merge",
+          content: `
+                    <div class="space-y-4">
+                        <p>Това е най-новата и важна концепция. Свойството <code>public Author Author</code> не съществува в базата данни като колона!</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-xl">
+                                <h5 class="font-bold mb-2">В Базата:</h5>
+                                <p class="text-xs font-mono">Таблица Books има само AuthorId (цяло число).</p>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded-xl">
+                                <h5 class="font-bold mb-2">В C#:</h5>
+                                <p class="text-xs font-mono">Ние имаме целия обект Author с неговите име, биография и т.н.</p>
+                            </div>
+                        </div>
+                        <p>ORM автоматично попълва този обект, когато правим JOIN заявка.</p>
+                    </div>`,
+        },
+        {
+          title: "7. Архитектура на DbContext",
+          icon: "settings",
+          content: `
+                    <div class="space-y-4">
+                        <p>Класът <code>DbContext</code> е "менажерът" на базата данни. Всичко преминава през него.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `public class LibraryDbContext : DbContext {
+    public LibraryDbContext(DbContextOptions<LibraryDbContext> options)
+        : base(options) { }
+
+    // Всеки DbSet е входна точка към таблица
+    public DbSet<Author> Authors { get; set; }
+    public DbSet<Book> Books { get; set; }
+}`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "8. Конфигурация на Свързването",
+          icon: "link",
+          content: `
+                    <div class="space-y-4">
+                        <p>Трябва да кажем на приложението къде се намира MySQL сървъра в <code>appsettings.json</code>.</p>
+                        ${createCodeBlock(
+                          "json",
+                          `"ConnectionStrings": {
+  "DefaultConnection": "server=localhost;port=3306;database=LibraryManagerDB;user=root;password="
+}`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "9. Dependency Injection (Program.cs)",
+          icon: "cpu",
+          content: `
+                    <div class="space-y-4">
+                        <p>Ние не създаваме обекти на DbContext ръчно (не пишем <code>new LibraryDbContext()</code>). ASP.NET го прави вместо нас.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<LibraryDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "10. CRUD: Прочитане (Read)",
+          icon: "search",
+          content: `
+                    <div class="space-y-4">
+                        <p>За да прочетем данни, използваме <strong>LINQ</strong> заявки.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `// Взимане на всички автори от базата
+var allAuthors = await _context.Authors.ToListAsync();
+
+// Взимане на автор по ID
+var author = await _context.Authors.FindAsync(1);`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "11. JOIN операции (Include)",
+          icon: "combine",
+          content: `
+                    <div class="space-y-4">
+                        <p>По подразбиране EF не зарежда свързаните обекти (за пестене на памет). Трябва изрично да ги поискаме с <code>.Include()</code>.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `// Взимаме книгите ЗАЕДНО с техните автори
+var booksWithAuthors = await _context.Books
+    .Include(b => b.Author) // Прави SQL JOIN
+    .ToListAsync();`,
+                        )}
+                        <p>Ако забравите <code>.Include()</code>, свойството <code>book.Author</code> ще бъде <strong>null</strong>.</p>
+                    </div>`,
+        },
+        {
+          title: "12. Филтриране и Търсене",
+          icon: "filter",
+          content: `
+                    <div class="space-y-4">
+                        <p>Можем да филтрираме данни директно в SQL заявката чрез C# код.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `var expensiveBooks = await _context.Books
+    .Where(b => b.Price > 50) // SQL: WHERE Price > 50
+    .OrderByDescending(b => b.Price) // SQL: ORDER BY Price DESC
+    .ToListAsync();`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "13. Създаване на записи (Create)",
+          icon: "plus-circle",
+          content: `
+                    <div class="space-y-4">
+                        <p>Добавянето на данни става в две стъпки: Добавяне в списъка и записване в базата.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `var newBook = new Book { Title = "Нова книга", AuthorId = 1 };
+
+_context.Books.Add(newBook); // Само маркира за добавяне
+await _context.SaveChangesAsync(); // РЕАЛНОТО ИЗПЪЛНЕНИЕ НА SQL`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "14. Моделно свързване (Model Binding)",
+          icon: "mouse-pointer",
+          content: `
+                    <div class="space-y-4">
+                        <p>В Razor Pages използваме атрибута <code>[BindProperty]</code>, за да свържем автоматично HTML формата с C# обекта.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `[BindProperty]
+public Book Book { get; set; } = new();
+
+public async Task<IActionResult> OnPostAsync() {
+    if (!ModelState.IsValid) return Page();
+    
+    _context.Books.Add(Book);
+    await _context.SaveChangesAsync();
+    return RedirectToPage("./Index");
+}`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "15. Fluent API (Напреднали)",
+          icon: "terminal",
+          content: `
+                    <div class="space-y-4">
+                        <p>Понякога атрибутите (Data Annotations) не са достатъчни. Можем да конфигурираме мапването в метода <code>OnModelCreating</code>.</p>
+                        ${createCodeBlock(
+                          "csharp",
+                          `protected override void OnModelCreating(ModelBuilder modelBuilder) {
+    // Указваме, че заглавието винаги трябва да има стойност и макс дължина
+    modelBuilder.Entity<Book>()
+        .Property(b => b.Title)
+        .IsRequired()
+        .HasMaxLength(200);
+}`,
+                        )}
+                    </div>`,
+        },
+        {
+          title: "16. Обобщение на Мапването",
+          icon: "check-check",
+          content: `
+                    <div class="space-y-4">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left border-collapse border border-slate-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="p-3 border border-slate-200">База данни</th>
+                                        <th class="p-3 border border-slate-200">C# / EF Core</th>
+                                        <th class="p-3 border border-slate-200">Инструмент</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="p-3 border border-slate-200 font-mono">PRIMARY KEY</td><td class="p-3 border border-slate-200 font-mono text-indigo-600">[Key]</td><td class="p-3 border border-slate-200">ID идентификация</td></tr>
+                                    <tr><td class="p-3 border border-slate-200 font-mono">FOREIGN KEY</td><td class="p-3 border border-slate-200 font-mono text-indigo-600">[ForeignKey]</td><td class="p-3 border border-slate-200">Връзка между таблици</td></tr>
+                                    <tr><td class="p-3 border border-slate-200 font-mono">NOT NULL</td><td class="p-3 border border-slate-200 font-mono text-indigo-600">[Required]</td><td class="p-3 border border-slate-200">Валидация</td></tr>
+                                    <tr><td class="p-3 border border-slate-200 font-mono">LEFT JOIN</td><td class="p-3 border border-slate-200 font-mono text-indigo-600">.Include()</td><td class="p-3 border border-slate-200">Зареждане на данни</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-center font-bold text-indigo-600 mt-6 italic">Вече сте готови да изграждате професионални архитектури с бази данни!</p>
+                    </div>`,
+        },
+      ];
+
+      let currentStep = 0;
+
+      function createCodeBlock(lang, code) {
+        return `
+                <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm my-4">
+                    <div class="flex items-center justify-between bg-slate-800 px-4 py-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                        <span>${lang}</span>
+                        <button onclick="copyCode(this)" data-code="${encodeURIComponent(code)}" class="flex items-center gap-1 hover:text-white transition-colors">
+                            <i data-lucide="copy" class="w-3 h-3"></i> Копирай
+                        </button>
+                    </div>
+                    <pre class="p-5 bg-slate-900 text-slate-100 text-sm font-mono overflow-x-auto leading-relaxed scroll-thin"><code>${code}</code></pre>
+                </div>`;
+      }
+
+      function copyCode(btn) {
+        const code = decodeURIComponent(btn.getAttribute("data-code"));
+        const textArea = document.createElement("textarea");
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-green-400"></i> <span class="text-green-400">Готово</span>`;
+        lucide.createIcons();
+
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          lucide.createIcons();
+        }, 2000);
+      }
+
+      function renderSidebar() {
+        const nav = document.getElementById("sidebar");
+        nav.innerHTML = sections
+          .map(
+            (s, i) => `
+                <button onclick="goToStep(${i})" class="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${currentStep === i ? "step-active shadow-sm" : "text-slate-500 hover:bg-slate-100"}">
+                    <div class="w-6 h-6 flex items-center justify-center rounded-lg ${currentStep === i ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"} text-[10px] font-black">
+                        ${i + 1}
+                    </div>
+                    <span class="text-xs font-bold ${currentStep === i ? "text-indigo-900" : ""}">${s.title}</span>
+                </button>
+            `,
+          )
+          .join("");
+        lucide.createIcons();
+      }
+
+      function renderContent() {
+        const section = sections[currentStep];
+        document.getElementById("section-title").innerHTML =
+          `<i data-lucide="${section.icon}" class="w-6 h-6 text-indigo-500"></i> ${section.title}`;
+        document.getElementById("section-body").innerHTML = section.content;
+        document.getElementById("step-counter").innerText =
+          `СТЪПКА ${currentStep + 1} ОТ ${sections.length}`;
+
+        const progress = ((currentStep + 1) / sections.length) * 100;
+        document.getElementById("progress-bar").style.width = `${progress}%`;
+
+        document.getElementById("prev-btn").disabled = currentStep === 0;
+        document.getElementById("next-btn").innerHTML =
+          currentStep === sections.length - 1
+            ? 'Финализиране <i data-lucide="check-circle" class="w-4 h-4"></i>'
+            : 'Следваща <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+
+        lucide.createIcons();
+
+        const body = document.getElementById("section-body");
+        body.classList.remove("animate-fade-in");
+        void body.offsetWidth;
+        body.classList.add("animate-fade-in");
+      }
+
+      function goToStep(step) {
+        currentStep = step;
+        renderSidebar();
+        renderContent();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      document.getElementById("prev-btn").onclick = () => {
+        if (currentStep > 0) goToStep(currentStep - 1);
+      };
+
+      document.getElementById("next-btn").onclick = () => {
+        if (currentStep < sections.length - 1) goToStep(currentStep + 1);
+      };
+
+      window.onload = () => {
+        renderSidebar();
+        renderContent();
+      };
+    </script>
+  </body>
+</html>
